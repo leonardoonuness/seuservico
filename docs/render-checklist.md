@@ -23,6 +23,7 @@ Serviços criados pelo blueprint:
 - `seuservico-db` (PostgreSQL)
 
 > Observação: nesta versão do blueprint, o Redis **não é provisionado automaticamente** (evita erro de schema no campo `keyvalue`).
+- `seuservico-redis` (Redis)
 
 ## 3) Configurar variáveis obrigatórias
 
@@ -45,6 +46,14 @@ Após os serviços existirem, abra cada um dos 3 processos de aplicação (`api`
 4. Faça deploy do `seuservico-api`.
 5. Faça deploy do `seuservico-worker`.
 6. Faça deploy do `seuservico-cron-cleanup`.
+> `DATABASE_URL` e `REDIS_URL` já são vinculados automaticamente pelo blueprint.
+
+## 4) Ordem de deploy recomendada
+
+1. Aguarde primeiro `seuservico-db` e `seuservico-redis` ficarem **Available**.
+2. Faça deploy do `seuservico-api`.
+3. Faça deploy do `seuservico-worker`.
+4. Faça deploy do `seuservico-cron-cleanup`.
 
 ## 5) Rodar migrações Alembic (primeiro deploy)
 
@@ -65,6 +74,7 @@ alembic upgrade head
 - **401/erros de JWT entre API e worker/cron**: normalmente `SECRET_KEY` diferente.
 - **Erro de conexão no banco**: aguarde DB ficar `Available` antes do deploy da API.
 - **Tasks não processam**: confirme `REDIS_URL` igual nos 3 serviços e logs de conexão ao Redis.
+- **Tasks não processam**: confirme `REDIS_URL` em worker/cron e logs de conexão.
 
 ## 8) O que foi possível executar automaticamente neste ambiente
 
