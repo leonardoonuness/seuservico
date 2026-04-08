@@ -83,14 +83,14 @@ services:
       - key: UPLOAD_DIR
         value: uploads
 
-  - type: keyvalue
-    name: seuservico-redis
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: []
-
 databases:
   - name: seuservico-db
     plan: starter
     databaseName: seuservico
     user: seuservico
+
+keyvalue:
+  - name: seuservico-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
