@@ -1,97 +1,52 @@
-# Checklist de Deploy no Render (passo a passo)
+# Checklist de Deploy no Render (modo gratuito, sem Redis)
 
-Este guia foi feito para o blueprint `render.yaml` deste repositório.
+Este guia é para subir o projeto em modo gratuito, **sem Redis**, para validação inicial.
 
-## 1) Pré-requisitos
+## O que o blueprint cria
 
-- Repositório no GitHub com o arquivo `render.yaml` na raiz.
-- Conta no Render conectada ao GitHub.
-- Uma `SECRET_KEY` forte para JWT (deve ser **igual** em API, worker e cron).
+- `seuservico-api` (web)
+- `seuservico-db` (PostgreSQL)
 
-## 2) Criar stack via Blueprint
+> Neste modo, **worker/cron e Redis ficam de fora** para simplificar custo e operação.
+
+## Passo a passo
 
 1. No Render, clique em **New +**.
 2. Clique em **Blueprint**.
 3. Selecione o repositório.
-4. Confirme que o arquivo detectado é `render.yaml`.
-5. Clique em **Apply** para criar os serviços.
+4. Confirme o `render.yaml`.
+5. Clique em **Apply**.
 
-Serviços criados pelo blueprint:
-- `seuservico-api` (web)
-- `seuservico-worker` (worker)
-- `seuservico-cron-cleanup` (cron)
-- `seuservico-db` (PostgreSQL)
+## Variáveis obrigatórias
 
-> Observação: nesta versão do blueprint, o Redis **não é provisionado automaticamente** (evita erro de schema no campo `keyvalue`).
+No serviço `seuservico-api`, configure:
 
-## 3) Configurar variáveis obrigatórias
+- `SECRET_KEY` (obrigatória)
+- `DATABASE_URL` (já vinculada automaticamente pelo blueprint)
+- `REDIS_URL` fica vazia (`""`) neste modo gratuito
 
-Após os serviços existirem, abra cada um dos 3 processos de aplicação (`api`, `worker`, `cron`) e configure:
+## Ordem recomendada
 
-- `SECRET_KEY` com **exatamente o mesmo valor** nos três serviços.
-- Ajuste opcional de:
-  - `ACCESS_TOKEN_EXPIRE_MINUTES` (padrão no blueprint: `30`)
-  - `REFRESH_TOKEN_EXPIRE_DAYS` (padrão no blueprint: `7`)
-  - `UPLOAD_DIR` (padrão no blueprint: `uploads`)
-
-> `DATABASE_URL` é vinculado automaticamente pelo blueprint.
-> `REDIS_URL` deve ser preenchido manualmente com a URL do Redis que você criar no Render (ou externo).
-
-## 4) Ordem de deploy recomendada
-
-1. Aguarde `seuservico-db` ficar **Available**.
-2. Crie um Redis no Render (ou use externo) e copie a URL.
-3. Preencha `REDIS_URL` (igual) em `seuservico-api`, `seuservico-worker` e `seuservico-cron-cleanup`.
-4. Faça deploy do `seuservico-api`.
-5. Faça deploy do `seuservico-worker`.
-6. Faça deploy do `seuservico-cron-cleanup`.
-
-## 5) Rodar migrações Alembic (primeiro deploy)
-
-No shell do serviço `seuservico-api`, execute:
+1. Aguarde o banco `seuservico-db` ficar **Available**.
+2. Faça deploy do `seuservico-api`.
+3. Rode migração no shell da API:
 
 ```bash
 alembic upgrade head
 ```
 
-## 6) Validação pós-deploy
+## Validação
 
-- API no ar: abra `https://<seu-servico-api>.onrender.com/docs`
-- Worker conectado ao broker: verifique logs do `seuservico-worker`.
-- Cron executando: confira logs do `seuservico-cron-cleanup` no horário agendado.
+- Abra: `https://<seu-servico-api>.onrender.com/docs`
+- Teste cadastro/login básicos e endpoints principais.
 
-## 7) Troubleshooting rápido
+## Impacto de remover Redis (esperado)
 
-- **401/erros de JWT entre API e worker/cron**: normalmente `SECRET_KEY` diferente.
-- **Erro de conexão no banco**: aguarde DB ficar `Available` antes do deploy da API.
-- **Tasks não processam**: confirme `REDIS_URL` igual nos 3 serviços e logs de conexão ao Redis.
+Com Redis desativado:
 
-## 8) O que foi possível executar automaticamente neste ambiente
+- ✅ API principal e banco continuam funcionando.
+- ⚠️ Blacklist de token (logout/refresh com invalidação forte) vira modo degradado.
+- ⚠️ Cache fica desativado.
+- ⚠️ Celery worker/cron não rodam neste blueprint gratuito.
 
-- Validação de sintaxe YAML do `render.yaml`.
-
-Não foi possível executar deploy real no Render por depender de:
-- autenticação da sua conta Render,
-- conexão do seu GitHub no painel,
-- aprovação/aplicação do blueprint no seu workspace.
-
-## 9) Se ocorrer conflito de merge no Git
-
-Se você estiver na branch destino (ex.: `main`) e quiser manter a versão deste PR para os arquivos de deploy:
-
-```bash
-git merge <branch-do-pr>
-git checkout --theirs render.yaml docs/render-checklist.md
-git add render.yaml docs/render-checklist.md
-git commit -m "Resolve conflicts keeping Render deploy files"
-```
-
-> Dica: em merges, `--theirs` normalmente representa a branch que está sendo mesclada.
-
-## 10) Comando único para merge automático (fallback)
-
-Se estiver na branch de destino e quiser tentar merge automático priorizando os arquivos desta PR:
-
-```bash
-git fetch origin && git checkout main && git pull origin main && (git merge work || (git checkout --theirs render.yaml docs/render-checklist.md && git add render.yaml docs/render-checklist.md && git commit -m "Resolve conflicts keeping PR deploy files")) && git push origin main
-```
+Quando decidir evoluir, adicionamos Redis + worker + cron sem quebrar a base.
