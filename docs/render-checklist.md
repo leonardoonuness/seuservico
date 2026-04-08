@@ -21,6 +21,8 @@ Serviços criados pelo blueprint:
 - `seuservico-worker` (worker)
 - `seuservico-cron-cleanup` (cron)
 - `seuservico-db` (PostgreSQL)
+
+> Observação: nesta versão do blueprint, o Redis **não é provisionado automaticamente** (evita erro de schema no campo `keyvalue`).
 - `seuservico-redis` (Redis)
 
 ## 3) Configurar variáveis obrigatórias
@@ -33,6 +35,17 @@ Após os serviços existirem, abra cada um dos 3 processos de aplicação (`api`
   - `REFRESH_TOKEN_EXPIRE_DAYS` (padrão no blueprint: `7`)
   - `UPLOAD_DIR` (padrão no blueprint: `uploads`)
 
+> `DATABASE_URL` é vinculado automaticamente pelo blueprint.
+> `REDIS_URL` deve ser preenchido manualmente com a URL do Redis que você criar no Render (ou externo).
+
+## 4) Ordem de deploy recomendada
+
+1. Aguarde `seuservico-db` ficar **Available**.
+2. Crie um Redis no Render (ou use externo) e copie a URL.
+3. Preencha `REDIS_URL` (igual) em `seuservico-api`, `seuservico-worker` e `seuservico-cron-cleanup`.
+4. Faça deploy do `seuservico-api`.
+5. Faça deploy do `seuservico-worker`.
+6. Faça deploy do `seuservico-cron-cleanup`.
 > `DATABASE_URL` e `REDIS_URL` já são vinculados automaticamente pelo blueprint.
 
 ## 4) Ordem de deploy recomendada
@@ -60,6 +73,7 @@ alembic upgrade head
 
 - **401/erros de JWT entre API e worker/cron**: normalmente `SECRET_KEY` diferente.
 - **Erro de conexão no banco**: aguarde DB ficar `Available` antes do deploy da API.
+- **Tasks não processam**: confirme `REDIS_URL` igual nos 3 serviços e logs de conexão ao Redis.
 - **Tasks não processam**: confirme `REDIS_URL` em worker/cron e logs de conexão.
 
 ## 8) O que foi possível executar automaticamente neste ambiente
@@ -70,3 +84,16 @@ Não foi possível executar deploy real no Render por depender de:
 - autenticação da sua conta Render,
 - conexão do seu GitHub no painel,
 - aprovação/aplicação do blueprint no seu workspace.
+
+## 9) Se ocorrer conflito de merge no Git
+
+Se você estiver na branch destino (ex.: `main`) e quiser manter a versão deste PR para os arquivos de deploy:
+
+```bash
+git merge <branch-do-pr>
+git checkout --theirs render.yaml docs/render-checklist.md
+git add render.yaml docs/render-checklist.md
+git commit -m "Resolve conflicts keeping Render deploy files"
+```
+
+> Dica: em merges, `--theirs` normalmente representa a branch que está sendo mesclada.

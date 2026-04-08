@@ -16,6 +16,7 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
+        sync: false
         fromService:
           type: keyvalue
           name: seuservico-redis
@@ -43,6 +44,7 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
+        sync: false
         fromService:
           type: keyvalue
           name: seuservico-redis
@@ -70,6 +72,7 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
+        sync: false
         fromService:
           type: keyvalue
           name: seuservico-redis
