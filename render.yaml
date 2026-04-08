@@ -16,7 +16,10 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: keyvalue
+          name: seuservico-redis
+          property: connectionString
       - key: SECRET_KEY
         sync: false
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -40,7 +43,10 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: keyvalue
+          name: seuservico-redis
+          property: connectionString
       - key: SECRET_KEY
         sync: false
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -64,7 +70,10 @@ services:
           name: seuservico-db
           property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: keyvalue
+          name: seuservico-redis
+          property: connectionString
       - key: SECRET_KEY
         sync: false
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -79,3 +88,9 @@ databases:
     plan: starter
     databaseName: seuservico
     user: seuservico
+
+keyvalue:
+  - name: seuservico-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
