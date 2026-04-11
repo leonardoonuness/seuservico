@@ -1,8 +1,11 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import List
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+    
     APP_NAME: str = "SeuServiço"
     APP_ENV: str = "development"
     SECRET_KEY: str = "change-me-in-production"
@@ -26,9 +29,6 @@ class Settings(BaseSettings):
     @property
     def origins(self) -> List[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",")]
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()

@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,8 +20,11 @@ import app.models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create all tables at startup
-    Base.metadata.create_all(bind=engine)
+    # Create all tables at startup (with error handling)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create tables at startup: {str(e)}")
     
     # Create upload directories
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
