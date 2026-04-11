@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -5,20 +6,45 @@ from app.db.session import get_db
 from app.schemas.user import UserRegister, UserLogin, TokenResponse, RefreshRequest, ForgotPassword, ResetPassword, UserOut
 from app.services import auth_service
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
 bearer = HTTPBearer()
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(data: UserRegister, db: Session = Depends(get_db)):
-    user = auth_service.register_user(db, data)
-    from app.core.security import create_access_token, create_refresh_token
-    return {
-        "access_token": create_access_token(user.id),
-        "refresh_token": create_refresh_token(user.id),
-        "token_type": "bearer",
-        "user": user,
+    """
+    Register a new user.
+    
+    Expected payload from Flutter:
+    {
+        "name": "string",
+        "email": "string",
+        "password": "string",
+        "type": "client",
+        "phone": "string",
+        "city": "string"
     }
+    """
+    logger.info(f"Register endpoint called for email: {data.email}")
+    
+    try:
+        user = auth_service.register_user(db, data)
+        from app.core.security import create_access_token, create_refresh_token
+        
+        response = {
+            "access_token": create_access_token(user.id),
+            "refresh_token": create_refresh_token(user.id),
+            "token_type": "bearer",
+            "user": user,
+        }
+        logger.info(f"User registration successful: {user.id}")
+        return response
+    
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}", exc_info=True)
+        raise
 
 
 @router.post("/login", response_model=TokenResponse)

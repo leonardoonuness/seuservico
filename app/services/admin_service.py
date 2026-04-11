@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models.user import User, UserType
+from app.models.user import User
 from app.models.professional import Professional
 from app.models.service import ServiceRequest, ServiceStatus
 from app.models.review import Review
@@ -11,8 +11,8 @@ from app.schemas.admin import BlockUser, ModerateReview
 
 def get_dashboard_stats(db: Session) -> dict:
     total_users = db.query(User).count()
-    total_professionals = db.query(User).filter(User.type == UserType.professional).count()
-    total_clients = db.query(User).filter(User.type == UserType.client).count()
+    total_professionals = db.query(User).filter(User.type == "professional").count()
+    total_clients = db.query(User).filter(User.type == "client").count()
     total_services = db.query(ServiceRequest).count()
     completed = db.query(ServiceRequest).filter(ServiceRequest.status == ServiceStatus.completed).count()
     pending = db.query(ServiceRequest).filter(ServiceRequest.status == ServiceStatus.pending).count()

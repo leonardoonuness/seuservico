@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.security import decode_token
-from app.models.user import User, UserType
+from app.models.user import User
 
 bearer_scheme = HTTPBearer()
 
@@ -24,12 +24,12 @@ def get_current_user(
 
 
 def get_current_active_professional(user: User = Depends(get_current_user)) -> User:
-    if user.type != UserType.professional:
+    if user.type != "professional":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Apenas profissionais")
     return user
 
 
 def get_current_admin(user: User = Depends(get_current_user)) -> User:
-    if user.type != UserType.admin:
+    if user.type != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado")
     return user

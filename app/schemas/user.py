@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime
-from app.models.user import UserType
 
 
 class UserRegister(BaseModel):
@@ -10,7 +9,7 @@ class UserRegister(BaseModel):
     password: str
     phone: str
     city: str
-    type: UserType = UserType.client
+    type: Literal["client", "professional", "admin"] = "client"
 
     @field_validator("password")
     @classmethod
@@ -18,6 +17,27 @@ class UserRegister(BaseModel):
         if len(v) < 8:
             raise ValueError("Senha deve ter no mínimo 8 caracteres")
         return v
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Nome não pode estar vazio")
+        return v.strip()
+
+    @field_validator("phone")
+    @classmethod
+    def phone_not_empty(cls, v: str) -> str:
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Telefone não pode estar vazio")
+        return v.strip()
+
+    @field_validator("city")
+    @classmethod
+    def city_not_empty(cls, v: str) -> str:
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Cidade não pode estar vazia")
+        return v.strip()
 
 
 class UserLogin(BaseModel):
@@ -58,7 +78,7 @@ class UserOut(BaseModel):
     name: str
     email: str
     phone: str
-    type: UserType
+    type: str
     city: str
     profile_image: Optional[str] = None
     is_verified: bool

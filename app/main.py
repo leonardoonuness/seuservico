@@ -19,6 +19,9 @@ import app.models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Create all tables at startup
+    Base.metadata.create_all(bind=engine)
+    
     # Create upload directories
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
     Path(settings.UPLOAD_DIR + "/avatars").mkdir(parents=True, exist_ok=True)

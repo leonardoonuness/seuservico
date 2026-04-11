@@ -1,15 +1,12 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum
+from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
-import enum
 
 
-class UserType(str, enum.Enum):
-    client = "client"
-    professional = "professional"
-    admin = "admin"
+# Valid user types (constants for validation)
+VALID_USER_TYPES = ["client", "professional", "admin"]
 
 
 def _now():
@@ -24,7 +21,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
-    type: Mapped[UserType] = mapped_column(SAEnum(UserType), default=UserType.client)
+    type: Mapped[str] = mapped_column(String(20), default="client", nullable=False)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     profile_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)

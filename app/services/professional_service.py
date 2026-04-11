@@ -4,7 +4,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.professional import Professional
-from app.models.user import User, UserType
+from app.models.user import User
 from app.models.service import ServiceRequest, ServiceStatus
 from app.models.review import Review
 from app.schemas.professional import ProfessionalRegister, ProfessionalUpdate, AvailabilityUpdate
@@ -12,8 +12,8 @@ from app.core.config import settings
 
 
 def register_professional(db: Session, user: User, data: ProfessionalRegister) -> Professional:
-    if user.type != UserType.professional:
-        user.type = UserType.professional
+    if user.type != "professional":
+        user.type = "professional"
     if db.query(Professional).filter(Professional.user_id == user.id).first():
         raise HTTPException(status_code=409, detail="Perfil profissional já existe")
     prof = Professional(
